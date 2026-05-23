@@ -1,17 +1,37 @@
 services:
   sorteo-app:
     build: .
-    ports:
-      - "5000:5000"
+    container_name: sorteo_app
+    restart: unless-stopped
     environment:
       - FLASK_SECRET_KEY=${FLASK_SECRET_KEY:-super-secret-key-cambia-esto}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - OAUTHLIB_INSECURE_TRANSPORT=${OAUTHLIB_INSECURE_TRANSPORT:-1}
+      - OAUTHLIB_INSECURE_TRANSPORT=${OAUTHLIB_INSECURE_TRANSPORT:-0}
       - DATABASE_PATH=/data/sorteo.db
     volumes:
       - sorteo_data:/data
-    restart: unless-stopped
+    networks:
+      - traefik_web
+    labels:
+      - "traefik.enable=true"
+      # Router HTTPS
+      - "traefik.http.routers.sorteo-secure.rule=Host(`sorteo-app.flechatech.com`)"
+      - "traefik.http.routers.sorteo-secure.entrypoints=websecure"
+      - "traefik.http.routers.sorteo-secure.tls=true"
+      - "traefik.http.routers.sorteo-secure.tls.certresolver=myresolver"
+      # Redirección HTTP → HTTPS
+      - "traefik.http.routers.sorteo.rule=Host(`sorteo-app.flechatech.com`)"
+      - "traefik.http.routers.sorteo.entrypoints=web"
+      - "traefik.http.middlewares.sorteo-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sorteo-redirect.redirectscheme.permanent=true"
+      - "traefik.http.routers.sorteo.middlewares=sorteo-redirect"
+      # Puerto interno Flask
+      - "traefik.http.services.sorteo-service.loadbalancer.server.port=5000"
 
 volumes:
   sorteo_data:
+
+networks:
+  traefik_web:
+    external: true
