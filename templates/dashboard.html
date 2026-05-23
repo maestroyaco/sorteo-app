@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Mis Sorteos{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-white mb-0"><i class="bi bi-list-ul"></i> Mis Sorteos</h2>
+            <a href="{{ url_for('nuevo_sorteo') }}" class="btn btn-light">
+                <i class="bi bi-plus-lg"></i> Nuevo Sorteo
+            </a>
+        </div>
+
+        {% if sorteos %}
+        <div class="row g-3">
+            {% for s in sorteos %}
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-1">{{ s['title'] }}</h5>
+                            {% if s['description'] %}
+                            <p class="text-muted small mb-1">{{ s['description'] }}</p>
+                            {% endif %}
+                            <small class="text-muted">
+                                <i class="bi bi-calendar"></i> {{ s['created_at'][:10] }}
+                            </small>
+                        </div>
+                        <div>
+                            {% if s['winner'] %}
+                            <span class="badge bg-success"><i class="bi bi-trophy"></i> Finalizado</span>
+                            {% else %}
+                            <span class="badge bg-primary">Activo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if s['winner'] %}
+                    <div class="mt-2 p-2 bg-success bg-opacity-10 rounded">
+                        <small class="text-success fw-bold">
+                            <i class="bi bi-star-fill"></i> Ganador: {{ s['winner'] }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    <div class="mt-2">
+                        <a href="{{ url_for('ver_sorteo', sorteo_id=s['id']) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-eye"></i> Ver detalles
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card p-5 text-center">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+            <h4 class="text-muted mt-3">No tienes sorteos aún</h4>
+            <p class="text-muted">Crea tu primer sorteo y agrega participantes.</p>
+            <a href="{{ url_for('nuevo_sorteo') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i> Crear primer sorteo
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

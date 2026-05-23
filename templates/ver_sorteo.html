@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ sorteo['title'] }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm mb-3">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+
+        <div class="card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h3 class="mb-1">{{ sorteo['title'] }}</h3>
+                    {% if sorteo['description'] %}
+                    <p class="text-muted">{{ sorteo['description'] }}</p>
+                    {% endif %}
+                </div>
+                {% if not sorteo['winner'] %}
+                <form method="POST" action="{{ url_for('eliminar_sorteo', sorteo_id=sorteo['id']) }}"
+                      onsubmit="return confirm('¿Seguro que quieres eliminar este sorteo?')">
+                    <button class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+            {% if sorteo['winner'] %}
+            <div class="text-center p-4 bg-success bg-opacity-10 rounded mt-3">
+                <div class="winner-badge">
+                    <i class="bi bi-trophy-fill text-warning display-4"></i>
+                </div>
+                <h4 class="text-success mt-3">¡Ganador!</h4>
+                <p class="display-6 fw-bold text-success">{{ sorteo['winner'] }}</p>
+                <small class="text-muted">Ejecutado: {{ sorteo['executed_at'][:19] }}</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Participantes -->
+        <div class="card p-4">
+            <h4 class="mb-3">
+                <i class="bi bi-people"></i> Participantes ({{ participants|length }})
+            </h4>
+
+            {% if not sorteo['winner'] %}
+            <form method="POST" action="{{ url_for('agregar_participante', sorteo_id=sorteo['id']) }}" class="mb-4">
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="email" class="form-control" name="email" placeholder="correo@ejemplo.com" required>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" name="name" placeholder="Nombre (opcional)">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-person-plus"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+            </form>
+            {% endif %}
+
+            {% if participants %}
+            <ul class="list-group mb-4">
+                {% for p in participants %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="bi bi-person"></i>
+                        <strong>{{ p['name'] }}</strong>
+                        <small class="text-muted">({{ p['email'] }})</small>
+                    </div>
+                    {% if not sorteo['winner'] %}
+                    <form method="POST"
+                          action="{{ url_for('eliminar_participante', sorteo_id=sorteo['id'], part_id=p['id']) }}">
+                        <button class="btn btn-outline-danger btn-sm" title="Eliminar">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted text-center">No hay participantes aún. Agrega correos electrónicos arriba.</p>
+            {% endif %}
+
+            {% if not sorteo['winner'] and participants|length >= 2 %}
+            <form method="POST" action="{{ url_for('ejecutar_sorteo', sorteo_id=sorteo['id']) }}"
+                  onsubmit="return confirm('¿Ejecutar el sorteo? Esto elegirá un ganador al azar.')">
+                <button class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-shuffle"></i> ¡Ejecutar Sorteo!
+                </button>
+            </form>
+            {% elif not sorteo['winner'] %}
+            <div class="alert alert-info text-center mb-0">
+                <i class="bi bi-info-circle"></i> Agrega al menos 2 participantes para ejecutar el sorteo.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
